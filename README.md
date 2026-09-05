@@ -1,3 +1,295 @@
+<?php
+session_start();
+
+/*
+=====================================================
+APLIKASI KASIR SEDERHANA - SINGLE FILE INDEX.PHP
+=====================================================
+Fitur:
+- Login Admin
+- CRUD Produk
+- CRUD Pelanggan
+- Keranjang Kasir
+- Checkout
+- Cetak Struk
+- Dashboard
+- Statistik
+- Search Produk
+- Dark UI Modern
+- Responsive
+- Tanpa Framework
+- Semua Dalam 1 File
+=====================================================
+*/
+
+$host = "localhost";
+$user = "root";
+$pass = "";
+$db   = "kasir_app";
+
+$conn = mysqli_connect($host, $user, $pass);
+
+if (!$conn) {
+    die("Koneksi gagal");
+}
+
+mysqli_query($conn, "CREATE DATABASE IF NOT EXISTS $db");
+mysqli_select_db($conn, $db);
+
+// ================================
+// TABEL PRODUK
+// ================================
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS products(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(200),
+    price INT,
+    stock INT,
+    category VARCHAR(100),
+    expired_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// ================================
+// TABEL CUSTOMER
+// ================================
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS customers(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    phone VARCHAR(20),
+    address TEXT,
+    email VARCHAR(100)
+)");
+
+// ================================
+// TABEL TRANSAKSI
+// ================================
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS transactions(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    invoice VARCHAR(100),
+    customer_name VARCHAR(100),
+    total INT,
+    pay INT,
+    change_money INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// ================================
+// TABEL DETAIL TRANSAKSI
+// ================================
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS transaction_details(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    invoice VARCHAR(100),
+    product_name VARCHAR(100),
+    qty INT,
+    price INT,
+    subtotal INT
+)");
+
+// ================================
+// LOGIN
+// ================================
+$defaultUser = "admin";
+$defaultPass = "12345";
+
+if (isset($_POST['login'])) {
+
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    if ($username == $defaultUser && $password == $defaultPass) {
+        $_SESSION['login'] = true;
+        header("Location:index.php");
+    } else {
+        $error = "Username atau Password salah";
+    }
+}
+
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header("Location:index.php");
+}
+
+// ================================
+// CRUD PRODUK
+// ================================
+if (isset($_POST['add_product'])) {
+
+    $name = $_POST['name'];
+    $price = $_POST['price'];
+    $stock = $_POST['stock'];
+    $category = $_POST['category'];
+    $expired = $_POST['expired_date'];
+
+    mysqli_query($conn, "INSERT INTO products(name,price,stock,category,expired_date)
+    VALUES('$name','$price','$stock','$category','$expired')");
+
+    header("Location:index.php?page=products");
+}
+
+if (isset($_POST['update_product'])) {
+
+    $id = $_POST['id'];
+    $name = $_POST['name'];
+    $price = $_POST['price'];
+    $stock = $_POST['stock'];
+    $category = $_POST['category'];
+    $expired = $_POST['expired_date'];
+
+    mysqli_query($conn, "UPDATE products SET
+        name='$name',
+        price='$price',
+        stock='$stock',
+        category='$category',
+        expired_date='$expired'
+        WHERE id='$id'
+    ");
+
+    header("Location:index.php?page=products");
+}
+
+if (isset($_GET['delete_product'])) {
+
+    $id = $_GET['delete_product'];
+
+    mysqli_query($conn, "DELETE FROM products WHERE id='$id'");
+
+    header("Location:index.php?page=products");
+}
+
+// ================================
+// CRUD CUSTOMER
+// ================================
+if (isset($_POST['add_customer'])) {
+
+    $name = $_POST['name'];
+    $phone = $_POST['phone'];
+    $address = $_POST['address'];
+    $email = $_POST['email'];
+
+    mysqli_query($conn, "INSERT INTO customers(name,phone,address,email)
+    VALUES('$name','$phone','$address','$email')");
+
+    header("Location:index.php?page=customers");
+}
+
+if (isset($_POST['update_customer'])) {
+
+    $id = $_POST['id'];
+    $name = $_POST['name'];
+    $phone = $_POST['phone'];
+    $address = $_POST['address'];
+    $email = $_POST['email'];
+
+    mysqli_query($conn, "UPDATE customers SET
+        name='$name',
+        phone='$phone',
+        address='$address',
+        email='$email'
+        WHERE id='$id'
+    ");
+
+    header("Location:index.php?page=customers");
+}
+
+if (isset($_GET['delete_customer'])) {
+
+    $id = $_GET['delete_customer'];
+
+    mysqli_query($conn, "DELETE FROM customers WHERE id='$id'");
+
+    header("Location:index.php?page=customers");
+}
+
+// ================================
+// KERANJANG
+// ================================
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+
+if (isset($_GET['add_cart'])) {
+
+    $id = $_GET['add_cart'];
+
+    $data = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM products WHERE id='$id'"));
+
+    $found = false;
+
+    foreach ($_SESSION['cart'] as $key => $item) {
+
+        if ($item['id'] == $id) {
+            $_SESSION['cart'][$key]['qty'] += 1;
+            $found = true;
+        }
+    }
+
+    if (!$found) {
+        $_SESSION['cart'][] = [
+            'id' => $data['id'],
+            'name' => $data['name'],
+            'price' => $data['price'],
+            'qty' => 1
+        ];
+    }
+
+    header("Location:index.php?page=cashier");
+}
+
+if (isset($_GET['remove_cart'])) {
+
+    $index = $_GET['remove_cart'];
+
+    unset($_SESSION['cart'][$index]);
+
+    $_SESSION['cart'] = array_values($_SESSION['cart']);
+
+    header("Location:index.php?page=cashier");
+}
+
+// ================================
+// CHECKOUT
+// ================================
+if (isset($_POST['checkout'])) {
+
+    $customer = $_POST['customer_name'];
+    $pay = $_POST['pay'];
+
+    $invoice = "INV" . time();
+
+    $total = 0;
+
+    foreach ($_SESSION['cart'] as $item) {
+        $total += $item['price'] * $item['qty'];
+    }
+
+    $change = $pay - $total;
+
+    mysqli_query($conn, "INSERT INTO transactions(invoice,customer_name,total,pay,change_money)
+    VALUES('$invoice','$customer','$total','$pay','$change')");
+
+    foreach ($_SESSION['cart'] as $item) {
+
+        $subtotal = $item['price'] * $item['qty'];
+
+        mysqli_query($conn, "INSERT INTO transaction_details(invoice,product_name,qty,price,subtotal)
+        VALUES(
+            '$invoice',
+            '{$item['name']}',
+            '{$item['qty']}',
+            '{$item['price']}',
+            '$subtotal'
+        )");
+
+        mysqli_query($conn, "UPDATE products SET stock = stock - {$item['qty']} WHERE id='{$item['id']}'");
+    }
+
+    $_SESSION['last_invoice'] = $invoice;
+    $_SESSION['cart'] = [];
+
+    header("Location:index.php?page=receipt");
+}
+
+?>
 
 <!DOCTYPE html>
 <html>
@@ -36,7 +328,7 @@
     }
 
     input,select,textarea{
-    lebar:100%;
+        width:100%;
         padding:14px;
         border:none;
         border-radius:10px;
@@ -110,7 +402,7 @@
     }
 
     table{
-    lebar:100%;
+        width:100%;
         border-collapse:collapse;
         margin-top:20px;
     }
@@ -127,7 +419,7 @@
     }
 
     .topbar{
-    lebar:100%;
+        width:100%;
         background:#1e293b;
         padding:20px;
         border-radius:20px;
@@ -207,7 +499,7 @@
     @media(max-width:768px){
 
         .sidebar{
-    width:100%;
+            width:100%;
             height:auto;
             position:relative;
         }
@@ -231,21 +523,21 @@
 
 <?php if(!isset($_SESSION['login'])): ?>
 
-<divclass="login-box">
+<div class="login-box">
 
     <h1>LOGIN KASIR</h1>
 
     <?php if(isset($error)): ?>
-    <div class="danger"><?php echo $error; ?></div>
+        <div class="danger"><?php echo $error; ?></div>
     <?php endif; ?>
 
     <form method="POST">
 
-    <input type="text" name="username" placeholder="Nama Pengguna" required>
+        <input type="text" name="username" placeholder="Username" required>
 
-    <input type="password" name="password" placeholder="Kata Sandi" required>
+        <input type="password" name="password" placeholder="Password" required>
 
-    <button name="login">MASUK</button>
+        <button name="login">LOGIN</button>
 
     </form>
 
@@ -253,20 +545,20 @@
 
 <?php else: ?>
 
-<divclass="sidebar">
+<div class="sidebar">
 
-    <h2>APP KASIR</h2>
+    <h2>KASIR APP</h2>
 
-    <a href="index.php">Dasbor</a>
+    <a href="index.php">Dashboard</a>
     <a href="index.php?page=products">Produk</a>
-    <a href="index.php?page=customers">Pelanggan</a>
+    <a href="index.php?page=customers">Customer</a>
     <a href="index.php?page=cashier">Kasir</a>
     <a href="index.php?page=transactions">Transaksi</a>
-    <a href="index.php?logout=true">Keluar</a>
+    <a href="index.php?logout=true">Logout</a>
 
 </div>
 
-<divclass="main">
+<div class="main">
 
 <?php
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
@@ -274,8 +566,8 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 
 <?php if($page == 'dashboard'): ?>
 
-<divclass="topbar">
-    <h1>Dasbor</h1>
+<div class="topbar">
+    <h1>Dashboard</h1>
 </div>
 
 <?php
@@ -287,27 +579,27 @@ $getIncome = mysqli_query($conn, "SELECT SUM(total) as income FROM transactions"
 $income = mysqli_fetch_assoc($getIncome);
 ?>
 
-<divclass="card-grid">
+<div class="card-grid">
 
     <div class="card">
-    <h3>Total Produk</h3>
-    <h2><?php echo $totalProduct; ?></h2>
+        <h3>Total Produk</h3>
+        <h2><?php echo $totalProduct; ?></h2>
     </div>
 
     <div class="card">
-    <h3>Total Pelanggan</h3>
-    <h2><?php echo $totalCustomer; ?></h2>
+        <h3>Total Customer</h3>
+        <h2><?php echo $totalCustomer; ?></h2>
     </div>
 
-<div class="card">
-<h3>Total Transaksi</h3>
-<h2><?php echo $totalTransaction; ?></h2>
-</div>
+    <div class="card">
+        <h3>Total Transaksi</h3>
+        <h2><?php echo $totalTransaction; ?></h2>
+    </div>
 
-<div class="card">
-<h3>Total Pendapatan</h3>
-<h2>Rp <?php echo number_format($income['income']); ?></h2>
-</div>
+    <div class="card">
+        <h3>Total Pendapatan</h3>
+        <h2>Rp <?php echo number_format($income['income']); ?></h2>
+    </div>
 
 </div>
 
@@ -315,42 +607,42 @@ $income = mysqli_fetch_assoc($getIncome);
 
 <?php if($page == 'products'): ?>
 
-<divclass="topbar">
+<div class="topbar">
     <h1>Manajemen Produk</h1>
 </div>
 
-<divclass="flex">
+<div class="flex">
 
-<divclass="w-50">
+<div class="w-50">
 
-<formmethod="POST">
+<form method="POST">
 
-<input type="text" name="name" placeholder="Nama Produk" required>
+    <input type="text" name="name" placeholder="Nama Produk" required>
 
-<input type="number" name="price" placeholder="Harga" required>
+    <input type="number" name="price" placeholder="Harga" required>
 
-    <input type="number" name="stock" placeholder="Stok" required>
+    <input type="number" name="stock" placeholder="Stock" required>
 
-<input type="text" name="category" placeholder="Kategori" required>
+    <input type="text" name="category" placeholder="Kategori" required>
 
-<input type="date" name="expired_date" required>
+    <input type="date" name="expired_date" required>
 
-<button name="add_product">Tambah Produk</button>
+    <button name="add_product">Tambah Produk</button>
 
 </form>
 
 </div>
 
-<divclass="w-50">
+<div class="w-50">
 
 <table>
 
 <tr>
     <th>ID</th>
-<th>Nama</th>
-<th>Harga</th>
+    <th>Nama</th>
+    <th>Harga</th>
     <th>Stock</th>
-<th>Aksi</th>
+    <th>Aksi</th>
 </tr>
 
 <?php
@@ -363,10 +655,10 @@ while($p = mysqli_fetch_assoc($products)):
     <td><?php echo $p['name']; ?></td>
     <td>Rp <?php echo number_format($p['price']); ?></td>
     <td><?php echo $p['stock']; ?></td>
-<td>
+    <td>
         <a href="index.php?delete_product=<?php echo $p['id']; ?>">
             <button>Hapus</button>
-</a>
+        </a>
     </td>
 </tr>
 
@@ -412,9 +704,9 @@ while($p = mysqli_fetch_assoc($products)):
 
 <tr>
     <th>ID</th>
-<th>Nama</th>
+    <th>Nama</th>
     <th>HP</th>
-<th>Aksi</th>
+    <th>Aksi</th>
 </tr>
 
 <?php
@@ -426,10 +718,10 @@ while($c = mysqli_fetch_assoc($customers)):
     <td><?php echo $c['id']; ?></td>
     <td><?php echo $c['name']; ?></td>
     <td><?php echo $c['phone']; ?></td>
-<td>
+    <td>
         <a href="index.php?delete_customer=<?php echo $c['id']; ?>">
             <button>Hapus</button>
-</a>
+        </a>
     </td>
 </tr>
 
@@ -479,12 +771,12 @@ while($p = mysqli_fetch_assoc($products)):
 <table>
 
 <tr>
-<th>Nomor</th>
-<th>Nama</th>
-<th>Harga</th>
-<th>Jumlah</th>
-<th>Subtotal</th>
-<th>Aksi</th>
+    <th>No</th>
+    <th>Nama</th>
+    <th>Harga</th>
+    <th>Qty</th>
+    <th>Subtotal</th>
+    <th>Aksi</th>
 </tr>
 
 <?php
@@ -497,15 +789,15 @@ $total += $subtotal;
 ?>
 
 <tr>
-<td><?php echo $no++; ?></td>
-<td><?php echo $cart['name']; ?></td>
-<td>Rp <?php echo number_format($cart['price']); ?></td>
-<td><?php echo $cart['qty']; ?></td>
-<td>Rp <?php echo number_format($subtotal); ?></td>
-<td>
+    <td><?php echo $no++; ?></td>
+    <td><?php echo $cart['name']; ?></td>
+    <td>Rp <?php echo number_format($cart['price']); ?></td>
+    <td><?php echo $cart['qty']; ?></td>
+    <td>Rp <?php echo number_format($subtotal); ?></td>
+    <td>
         <a href="index.php?page=cashier&remove_cart=<?php echo $index; ?>">
             <button>Hapus</button>
-</a>
+        </a>
     </td>
 </tr>
 
@@ -539,7 +831,7 @@ $total += $subtotal;
 <table>
 
 <tr>
-<th>Nomor</th>
+    <th>No</th>
     <th>Invoice</th>
     <th>Customer</th>
     <th>Total</th>
@@ -553,7 +845,7 @@ while($t = mysqli_fetch_assoc($transactions)):
 ?>
 
 <tr>
-<td><?php echo $no++; ?></td>
+    <td><?php echo $no++; ?></td>
     <td><?php echo $t['invoice']; ?></td>
     <td><?php echo $t['customer_name']; ?></td>
     <td>Rp <?php echo number_format($t['total']); ?></td>
@@ -590,7 +882,7 @@ $details = mysqli_query($conn, "SELECT * FROM transaction_details WHERE invoice=
 
 <tr>
     <th>Produk</th>
-<th>Jumlah</th>
+    <th>Qty</th>
     <th>Total</th>
 </tr>
 
@@ -599,7 +891,7 @@ $details = mysqli_query($conn, "SELECT * FROM transaction_details WHERE invoice=
 <tr>
     <td><?php echo $d['product_name']; ?></td>
     <td><?php echo $d['qty']; ?></td>
-<td>Rp <?php echo number_format($d['subtotal']); ?></td>
+    <td>Rp <?php echo number_format($d['subtotal']); ?></td>
 </tr>
 
 <?php endwhile; ?>
@@ -615,10 +907,10 @@ $details = mysqli_query($conn, "SELECT * FROM transaction_details WHERE invoice=
 
 <br>
 
-<button onclick="window.print()">Cetak</button>
+<button onclick="window.print()">Print</button>
 
 <a href="index.php?page=transactions">
-<button>Kembali</button>
+    <button>Kembali</button>
 </a>
 
 </div>
@@ -629,59 +921,59 @@ $details = mysqli_query($conn, "SELECT * FROM transaction_details WHERE invoice=
 
 <?php endif; ?>
 
-<script>script>
+<script>
 
 // ================================
 // JAM DIGITAL
 // ================================
 function updateClock(){
 
-const now=newDate();
+    const now = new Date();
 
-let hour = now.getHours();
-let minute = now.getMinutes();
-let second = now.getSeconds();
+    let hour = now.getHours();
+    let minute = now.getMinutes();
+    let second = now.getSeconds();
 
-hour = hour < 10 ? '0'+hour : hour;
-menit = menit < 10 ? '0'+menit : menit;
-detik = detik < 10 ? '0'+detik : detik;
+    hour = hour < 10 ? '0'+hour : hour;
+    minute = minute < 10 ? '0'+minute : minute;
+    second = second < 10 ? '0'+second : second;
 
-const jam = document.getElementById('clock');
+    const clock = document.getElementById('clock');
 
-if(jam){
-jam.innerHTML = jam + ':' + menit + ':' + detik;
+    if(clock){
+        clock.innerHTML = hour + ':' + minute + ':' + second;
     }
 }
 
 setInterval(updateClock,1000);
 
 // ================================
-// TABEL PENCARIAN
+// SEARCH TABLE
 // ================================
-function cariTabel(){
+function searchTable(){
 
-let input = document.getElementById('searchInput');
+    let input = document.getElementById('searchInput');
 
-if(!input) return;
+    if(!input) return;
 
-let filter = input.value.toUpperCase();
+    let filter = input.value.toUpperCase();
 
-let table = document.getElementById('tableData');
+    let table = document.getElementById('tableData');
 
-let tr = table.getElementsByTagName('tr');
+    let tr = table.getElementsByTagName('tr');
 
-for(let i=0;i<tr.length;i++){
+    for(let i=0;i<tr.length;i++){
 
-let td = tr[i].getElementsByTagName('td')[1];
+        let td = tr[i].getElementsByTagName('td')[1];
 
-if(td){
+        if(td){
 
-let txtValue = td.textContent || td.innerText;
+            let txtValue = td.textContent || td.innerText;
 
-if(txtValue.toUpperCase().indexOf(filter) > -1){
-tr[i].style.display='';
-}lain{
-tr[i].style.display='none';
+            if(txtValue.toUpperCase().indexOf(filter) > -1){
+                tr[i].style.display = '';
+            }else{
+                tr[i].style.display = 'none';
             }
         }
     }
@@ -690,48 +982,48 @@ tr[i].style.display='none';
 // ================================
 // NOTIFIKASI
 // ================================
-fungsi tampilkanNotif(teks){
+function showNotif(text){
 
-peringatan(teks);
+    alert(text);
 }
 
 // ================================
-// MODE GELAP
+// DARK MODE
 // ================================
-biarkan gelap = benar;
+let dark = true;
 
-fungsi alihkanGelap(){
+function toggleDark(){
 
-jika(gelap){
-latarBelakang.tubuh.gaya.latarBelakang='#ffffff';
-warna.tubuh.gaya.warna='#000000';
-gelap = salah;
-}lain{
-document.body.style.background='#0f172a';
-document.body.style.color='#ffffff';
-gelap = true;
+    if(dark){
+        document.body.style.background = '#ffffff';
+        document.body.style.color = '#000000';
+        dark = false;
+    }else{
+        document.body.style.background = '#0f172a';
+        document.body.style.color = '#ffffff';
+        dark = true;
     }
 }
 
 // ================================
 // VALIDASI FORM
 // ================================
-function validasiAngka(input){
+function validateNumber(input){
 
-if(input.value<0){
-input.value=0;
+    if(input.value < 0){
+        input.value = 0;
     }
 }
 
 // ================================
-// FOKUS OTOMATIS
+// AUTO FOCUS
 // ================================
-window.onload=function(){
+window.onload = function(){
 
-let firstInput = document.querySelector('input');
+    let firstInput = document.querySelector('input');
 
-if(firstInput){
-firstInput.focus();
+    if(firstInput){
+        firstInput.focus();
     }
 }
 
