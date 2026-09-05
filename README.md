@@ -1,27 +1,5 @@
 <?php
 session_start();
-
-/*
-=====================================================
-APLIKASI KASIR SEDERHANA - SINGLE FILE INDEX.PHP
-=====================================================
-Fitur:
-- Login Admin
-- CRUD Produk
-- CRUD Pelanggan
-- Keranjang Kasir
-- Checkout
-- Cetak Struk
-- Dashboard
-- Statistik
-- Search Produk
-- Dark UI Modern
-- Responsive
-- Tanpa Framework
-- Semua Dalam 1 File
-=====================================================
-*/
-
 $host = "localhost";
 $user = "root";
 $pass = "";
