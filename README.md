@@ -30,7 +30,7 @@ $db   = "kasir_app";
 $conn = mysqli_connect($host, $user, $pass);
 
 if (!$conn) {
-    die("Koneksi gagal");
+die("Koneksi gagal");
 }
 
 mysqli_query($conn, "CREATE DATABASE IF NOT EXISTS $db");
@@ -40,49 +40,49 @@ mysqli_select_db($conn, $db);
 // TABEL PRODUK
 // ================================
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS products(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(200),
-    price INT,
-    stock INT,
-    category VARCHAR(100),
-    expired_date DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+id INT AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(200),
+price INT,
+stock INT,
+category VARCHAR(100),
+expired_date DATE,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
 // ================================
-// TABEL CUSTOMER
+// TABEL PELANGGAN
 // ================================
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS customers(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100),
-    phone VARCHAR(20),
-    address TEXT,
-    email VARCHAR(100)
+id INT AUTO_INCREMENT PRIMARY KEY,
+nama VARCHAR(100),
+telepon VARCHAR(20),
+alamat TEXT,
+email VARCHAR(100)
 )");
 
 // ================================
 // TABEL TRANSAKSI
 // ================================
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS transactions(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    invoice VARCHAR(100),
-    customer_name VARCHAR(100),
-    total INT,
-    pay INT,
-    change_money INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+id INT AUTO_INCREMENT PRIMARY KEY,
+invoice VARCHAR(100),
+customer_name VARCHAR(100),
+total INT,
+pay INT,
+change_money INT,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
 // ================================
 // TABEL DETAIL TRANSAKSI
 // ================================
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS transaction_details(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    invoice VARCHAR(100),
-    product_name VARCHAR(100),
-    qty INT,
-    price INT,
-    subtotal INT
+id INT AUTO_INCREMENT PRIMARY KEY,
+invoice VARCHAR(100),
+nama_produk VARCHAR(100),
+qty INT,
+harga INT,
+subtotal INT
 )");
 
 // ================================
