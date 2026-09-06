@@ -229,7 +229,7 @@
                 </div>
                 <div class="modal-body p-4" id="printArea">
                     <div class="text-center mb-3">
-                        <h4 class="fw-bold mb-0"><i class="fa-solid fa-shop text-primary"></i> TOKO KASIR BERKAH</h4>
+                        <h4 class="fw-bold mb-0"><i class="fa-solid fa-shop text-primary"></i> TOKO NURUL</h4>
                         <p class="text-muted small mb-1">Jl. Inovasi Teknologi No. 45, Indonesia</p>
                         <hr class="border-dashed">
                     </div>
