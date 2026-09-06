@@ -1,379 +1,398 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <title>Aplikasi Kasir </title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Kasir - Nurul Fadilah</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #0f172a; color: #f8fafc; }
-
-        .sidebar {
-            width: 260px; background: #1e293b; height: 100vh; position: fixed; padding: 20px;
-            border-right: 1px solid #334155;
-        }
-        .sidebar h2 { margin-bottom: 30px; text-align: center; color: #3b82f6; }
-        .sidebar a {
-            display: block; color: #94a3b8; text-decoration: none; padding: 12px 16px;
-            margin-top: 8px; border-radius: 8px; font-weight: 500; transition: 0.2s; cursor: pointer;
-        }
-        .sidebar a:hover, .sidebar a.active { background: #334155; color: #fff; }
-
-        .main { margin-left: 260px; padding: 30px; }
-
-        .card-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px;
-        }
-        .card { background: #1e293b; padding: 24px; border-radius: 16px; border: 1px solid #334155; }
-        .card h3 { color: #94a3b8; font-size: 14px; }
-        .card h2 { font-size: 28px; margin-top: 8px; color: #f8fafc; }
-
-        input, select, textarea {
-            width: 100%; padding: 12px 16px; border: 1px solid #334155; border-radius: 8px;
-            margin-top: 12px; background: #0f172a; color: #fff; outline: none;
-        }
-        button {
-            padding: 12px 20px; border: none; border-radius: 8px; background: #3b82f6;
-            color: white; font-weight: 600; cursor: pointer; margin-top: 12px; width: 100%;
-        }
-        button:hover { background: #2563eb; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; border-radius: 12px; overflow: hidden; }
-        table th { background: #334155; padding: 14px; text-align: center; font-size: 14px; color: #cbd5e1; }
-        table td { padding: 14px; text-align: center; border-top: 1px solid #334155; font-size: 14px; color: #e2e8f0; }
-
-        .topbar { background: #1e293b; padding: 20px 24px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #334155; }
-        .topbar h1 { font-size: 22px; }
-
-        .flex { display: flex; gap: 20px; }
-        .w-50 { width: 50%; }
-
-        .grid-product {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;
-        }
-        .product-card { background: #1e293b; padding: 16px; border-radius: 12px; border: 1px solid #334155; }
-        .product-card h3 { font-size: 16px; margin-bottom: 6px; }
-        .product-card p { font-size: 13px; color: #94a3b8; margin-bottom: 4px; }
-        .product-card button { width: 100%; margin-top: 8px; padding: 8px; }
-
-        .btn-danger { background: #dc2626; }
-        .btn-danger:hover { background: #b91c1c; }
-
-        .page-content { display: none; }
-        .page-content.active { display: block; }
-
-        @media(max-width: 768px) {
-            .sidebar { width: 100%; height: auto; position: relative; }
-            .main { margin-left: 0; padding: 15px; }
-            .flex { flex-direction: column; }
-            .w-50 { width: 100%; }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printArea, #printArea * {
+                visibility: visible;
+            }
+            #printArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
         }
     </style>
 </head>
-<body>
+<body class="bg-light">
 
-<div class="sidebar">
-    <h2>KASIR APP</h2>
-    <a onclick="switchPage('dashboard')" id="nav-dashboard" class="active">Dashboard</a>
-    <a onclick="switchPage('products')" id="nav-products">Produk</a>
-    <a onclick="switchPage('customers')" id="nav-customers">Customer</a>
-    <a onclick="switchPage('cashier')" id="nav-cashier">Kasir</a>
-    <a onclick="switchPage('transactions')" id="nav-transactions">Transaksi</a>
-</div>
-
-<div class="main">
-
-    <!-- DASHBOARD -->
-    <div id="page-dashboard" class="page-content active">
-        <div class="topbar"><h1>Dashboard</h1></div>
-        <div class="card-grid">
-            <div class="card"><h3>Total Produk</h3><h2 id="stat-product">0</h2></div>
-            <div class="card"><h3>Total Customer</h3><h2 id="stat-customer">0</h2></div>
-            <div class="card"><h3>Total Transaksi</h3><h2 id="stat-transaction">0</h2></div>
-            <div class="card"><h3>Total Pendapatan</h3><h2 id="stat-income">Rp 0</h2></div>
-        </div>
-    </div>
-
-    <!-- PRODUK -->
-    <div id="page-products" class="page-content">
-        <div class="topbar"><h1>Manajemen Produk</h1></div>
-        <div class="flex">
-            <div class="w-50">
-                <form onsubmit="addProduct(event)">
-                    <input type="text" id="p-name" placeholder="Nama Produk" required>
-                    <input type="number" id="p-price" placeholder="Harga" required>
-                    <input type="number" id="p-stock" placeholder="Stok" required>
-                    <button type="submit">Tambah Produk</button>
-                </form>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Kasir App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#" onclick="switchPage('produk')">Produk</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="switchPage('transaksi')">Transaksi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="switchPage('riwayat')">Riwayat & Cetak</a></li>
+                </ul>
             </div>
-            <div class="w-50">
-                <table>
-                    <thead><tr><th>Nama</th><th>Harga</th><th>Stok</th><th>Aksi</th></tr></thead>
-                    <tbody id="table-product-body"></tbody>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+
+        <div id="page-produk" class="page-content">
+            <h2 class="mb-4">Manajemen Produk</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card p-3 shadow-sm mb-3">
+                        <h4>Tambah Produk</h4>
+                        <form id="formProduk">
+                            <div class="mb-3">
+                                <label class="form-label">Nama Produk</label>
+                                <input type="text" id="namaProduk" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Harga (Rp)</label>
+                                <input type="number" id="hargaProduk" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Stok</label>
+                                <input type="number" id="stokProduk" class="form-control" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Simpan Produk</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card p-3 shadow-sm">
+                        <h4>Daftar Produk</h4>
+                        <table class="table table-striped mt-2">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama Produk</th>
+                                    <th>Harga</th>
+                                    <th>Stok</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelProduk">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-transaksi" class="page-content d-none">
+            <h2 class="mb-4">Halaman Transaksi (Kasir)</h2>
+            <div class="row">
+                <div class="col-md-7">
+                    <div class="card p-3 shadow-sm">
+                        <h4>Pilih Produk</h4>
+                        <div class="row" id="listProdukTransaksi">
+                            </div>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="card p-3 shadow-sm">
+                        <h4>Keranjang Belanja</h4>
+                        <ul class="list-group my-3" id="cartList">
+                            <li class="list-group-item text-muted text-center">Keranjang kosong</li>
+                        </ul>
+                        <h5>Total: <span id="cartTotal" class="text-success">Rp 0</span></h5>
+                        <div class="mb-3 mt-2">
+                            <label class="form-label">Bayar (Rp)</label>
+                            <input type="number" id="bayarUang" class="form-control" oninput="hitungKembalian()">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Kembalian:</label>
+                            <h5 id="kembalianUang" class="text-primary">Rp 0</h5>
+                        </div>
+                        <button class="btn btn-success w-100" onclick="prosesTransaksi()">Selesaikan Transaksi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-riwayat" class="page-content d-none">
+            <h2 class="mb-4">Riwayat & Cetak Transaksi</h2>
+            <div class="card p-3 shadow-sm">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID Transaksi</th>
+                            <th>Waktu</th>
+                            <th>Total Belanja</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelRiwayat">
+                        </tbody>
                 </table>
             </div>
         </div>
+
     </div>
 
-    <!-- CUSTOMER -->
-    <div id="page-customers" class="page-content">
-        <div class="topbar"><h1>Manajemen Customer</h1></div>
-        <div class="flex">
-            <div class="w-50">
-                <form onsubmit="addCustomer(event)">
-                    <input type="text" id="c-name" placeholder="Nama Customer" required>
-                    <input type="text" id="c-phone" placeholder="Nomor HP" required>
-                    <button type="submit">Tambah Customer</button>
-                </form>
-            </div>
-            <div class="w-50">
-                <table>
-                    <thead><tr><th>Nama</th><th>HP</th><th>Aksi</th></tr></thead>
-                    <tbody id="table-customer-body"></tbody>
-                </table>
+    <div class="modal fade" id="modalStruk" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Struk Pembayaran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="printArea">
+                    <div class="text-center">
+                        <h4>TOKO KASIR BERKAH</h4>
+                        <p class="mb-1">Jl. Contoh No. 123, Indonesia</p>
+                        <hr>
+                    </div>
+                    <p id="strukInfo" class="mb-1"></p>
+                    <table class="table table-sm mt-2">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="strukItems"></tbody>
+                    </table>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <strong>Total:</strong>
+                        <span id="strukTotal"></span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <strong>Bayar:</strong>
+                        <span id="strukBayar"></span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <strong>Kembalian:</strong>
+                        <span id="strukKembalian"></span>
+                    </div>
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Terima Kasih Telah Berbelanja!</p>
+                        <small class="text-muted">Kasir App by Nurul Fadilah</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="window.print()">Cetak Struk</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- KASIR -->
-    <div id="page-cashier" class="page-content">
-        <div class="topbar"><h1>Kasir / Penjualan</h1></div>
-        <h3>Pilih Produk</h3>
-        <div class="grid-product" id="cashier-product-list"></div>
+    <footer class="text-center py-4 mt-5 bg-white border-top">
+        <p class="mb-0 text-muted">Aplikasi Kasir Web &copy; 2026 | Dibuat oleh <strong>Nurul Fadilah</strong></p>
+    </footer>
 
-        <h3 style="margin-top:30px;">Keranjang Belanja</h3>
-        <table>
-            <thead><tr><th>No</th><th>Produk</th><th>Harga</th><th>Qty</th><th>Subtotal</th><th>Aksi</th></tr></thead>
-            <tbody id="cart-body"></tbody>
-        </table>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-        <div id="checkout-form-container" style="margin-top:20px; background:#1e293b; padding:20px; border-radius:12px; border:1px solid #334155; display:none;">
-            <input type="text" id="co-customer" placeholder="Nama Customer" required>
-            <input type="number" id="co-pay" placeholder="Jumlah Uang Bayar" required>
-            <button onclick="checkout()" style="background:#16a34a;">Proses Checkout</button>
-        </div>
-    </div>
+    <script>
+        let produkList = [
+            { id: 1, nama: "Kopi Hitam", harga: 5000, stok: 20 },
+            { id: 2, nama: "Roti Bakar", harga: 10000, stok: 15 }
+        ];
+        let keranjang = [];
+        let riwayatTransaksi = [];
 
-    <!-- TRANSAKSI -->
-    <div id="page-transactions" class="page-content">
-        <div class="topbar"><h1>Riwayat Transaksi</h1></div>
-        <table>
-            <thead><tr><th>No</th><th>Invoice</th><th>Customer</th><th>Total</th><th>Tanggal</th></tr></thead>
-            <tbody id="table-transaction-body"></tbody>
-        </table>
-    </div>
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(el => el.classList.add('d-none'));
+            document.getElementById('page-' + pageId).classList.remove('d-none');
+            
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
 
-</div>
-
-<script>
-    // LocalStorage Database Initialization
-    let products = JSON.parse(localStorage.getItem('kasir_products')) || [];
-    let customers = JSON.parse(localStorage.getItem('kasir_customers')) || [];
-    let transactions = JSON.parse(localStorage.getItem('kasir_transactions')) || [];
-    let cart = [];
-
-    function saveData() {
-        localStorage.setItem('kasir_products', JSON.stringify(products));
-        localStorage.setItem('kasir_customers', JSON.stringify(customers));
-        localStorage.setItem('kasir_transactions', JSON.stringify(transactions));
-        updateDashboard();
-    }
-
-    function switchPage(pageId) {
-        document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
-        
-        document.getElementById('page-' + pageId).classList.add('active');
-        document.getElementById('nav-' + pageId).classList.add('active');
-
-        if(pageId === 'products') renderProducts();
-        if(pageId === 'customers') renderCustomers();
-        if(pageId === 'cashier') renderCashier();
-        if(pageId === 'transactions') renderTransactions();
-    }
-
-    function formatRupiah(angka) {
-        return 'Rp ' + angka.toLocaleString('id-ID');
-    }
-
-    // Dashboard Stats
-    function updateDashboard() {
-        document.getElementById('stat-product').innerText = products.length;
-        document.getElementById('stat-customer').innerText = customers.length;
-        document.getElementById('stat-transaction').innerText = transactions.length;
-        let totalIncome = transactions.reduce((acc, t) => acc + t.total, 0);
-        document.getElementById('stat-income').innerText = formatRupiah(totalIncome);
-    }
-
-    // Produk Functions
-    function addProduct(e) {
-        e.preventDefault();
-        let name = document.getElementById('p-name').value;
-        let price = parseInt(document.getElementById('p-price').value);
-        let stock = parseInt(document.getElementById('p-stock').value);
-
-        products.push({ id: Date.now(), name, price, stock });
-        saveData();
-        document.getElementById('p-name').value = '';
-        document.getElementById('p-price').value = '';
-        document.getElementById('p-stock').value = '';
-        renderProducts();
-    }
-
-    function deleteProduct(id) {
-        products = products.filter(p => p.id !== id);
-        saveData();
-        renderProducts();
-    }
-
-    function renderProducts() {
-        let html = '';
-        products.forEach(p => {
-            html += `<tr>
-                <td>${p.name}</td>
-                <td>${formatRupiah(p.price)}</td>
-                <td>${p.stock}</td>
-                <td><button class="btn-danger" onclick="deleteProduct(${p.id})" style="margin:0; padding:6px 12px;">Hapus</button></td>
-            </tr>`;
-        });
-        document.getElementById('table-product-body').html = html; // fix assignment below
-        document.getElementById('table-product-body').innerHTML = html;
-    }
-
-    // Customer Functions
-    function addCustomer(e) {
-        e.preventDefault();
-        let name = document.getElementById('c-name').value;
-        let phone = document.getElementById('c-phone').value;
-
-        customers.push({ id: Date.now(), name, phone });
-        saveData();
-        document.getElementById('c-name').value = '';
-        document.getElementById('c-phone').value = '';
-        renderCustomers();
-    }
-
-    function deleteCustomer(id) {
-        customers = customers.filter(c => c.id !== id);
-        saveData();
-        renderCustomers();
-    }
-
-    function renderCustomers() {
-        let html = '';
-        customers.forEach(c => {
-            html += `<tr>
-                <td>${c.name}</td>
-                <td>${c.phone}</td>
-                <td><button class="btn-danger" onclick="deleteCustomer(${c.id})" style="margin:0; padding:6px 12px;">Hapus</button></td>
-            </tr>`;
-        });
-        document.getElementById('table-customer-body').innerHTML = html;
-    }
-
-    // Cashier Functions
-    function renderCashier() {
-        let htmlProd = '';
-        products.filter(p => p.stock > 0).forEach(p => {
-            htmlProd += `<div class="product-card">
-                <h3>${p.name}</h3>
-                <p>Harga: ${formatRupiah(p.price)}</p>
-                <p>Stok: ${p.stock}</p>
-                <button onclick="addToCart(${p.id})">Tambah</button>
-            </div>`;
-        });
-        document.getElementById('cashier-product-list').innerHTML = htmlProd;
-
-        let htmlCart = '';
-        let total = 0;
-        cart.forEach((item, index) => {
-            let subtotal = item.price * item.qty;
-            total += subtotal;
-            htmlCart += `<tr>
-                <td>${index + 1}</td>
-                <td>${item.name}</td>
-                <td>${formatRupiah(item.price)}</td>
-                <td>${item.qty}</td>
-                <td>${formatRupiah(subtotal)}</td>
-                <td><button class="btn-danger" onclick="removeFromCart(${index})" style="margin:0; padding:6px 12px;">Hapus</button></td>
-            </tr>`;
-        });
-        htmlCart += `<tr><td colspan="4"><b>Total Pembayaran</b></td><td colspan="2"><b>${formatRupiah(total)}</b></td></tr>`;
-        document.getElementById('cart-body').innerHTML = htmlCart;
-
-        document.getElementById('checkout-form-container').style.display = cart.length > 0 ? 'block' : 'none';
-    }
-
-    function addToCart(id) {
-        let prod = products.find(p => p.id === id);
-        if(!prod || prod.stock <= 0) return;
-
-        let exist = cart.find(item => item.id === id);
-        if(exist) {
-            if(exist.qty < prod.stock) exist.qty++;
-            else alert('Stok tidak cukup!');
-        } else {
-            cart.push({ id: prod.id, name: prod.name, price: prod.price, qty: 1 });
-        }
-        renderCashier();
-    }
-
-    function removeFromCart(index) {
-        cart.splice(index, 1);
-        renderCashier();
-    }
-
-    function checkout() {
-        let customerName = document.getElementById('co-customer').value;
-        let pay = parseInt(document.getElementById('co-pay').value);
-
-        if(!customerName || !pay) {
-            alert('Nama customer dan jumlah bayar harus diisi!');
-            return;
+            if (pageId === 'produk') renderProduk();
+            if (pageId === 'transaksi') renderProdukTransaksi();
+            if (pageId === 'riwayat') renderRiwayat();
         }
 
-        let total = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
-        if(pay < total) {
-            alert('Uang bayar kurang!');
-            return;
+        // --- MANAJEMEN PRODUK ---
+        document.getElementById('formProduk').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nama = document.getElementById('namaProduk').value;
+            const harga = parseInt(document.getElementById('hargaProduk').value);
+            const stok = parseInt(document.getElementById('stokProduk').value);
+
+            produkList.push({ id: Date.now(), nama, harga, stok });
+            this.reset();
+            renderProduk();
+        });
+
+        function renderProduk() {
+            let html = '';
+            produkList.forEach((p, index) => {
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${p.nama}</td>
+                    <td>Rp ${p.harga.toLocaleString()}</td>
+                    <td>${p.stok}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="hapusProduk(${p.id})">Hapus</button></td>
+                </tr>`;
+            });
+            document.getElementById('tabelProduk').innerHTML = html;
         }
 
-        // Kurangi stok produk asli
-        cart.forEach(item => {
-            let p = products.find(prod => prod.id === item.id);
-            if(p) p.stock -= item.qty;
-        });
+        function hapusProduk(id) {
+            produkList = produkList.filter(p => p.id !== id);
+            renderProduk();
+        }
 
-        let invoice = 'INV' + Date.now();
-        transactions.push({
-            invoice,
-            customer_name: customerName,
-            total,
-            created_at: new Date().toLocaleString()
-        });
+        // --- TRANSAKSI / POS ---
+        function renderProdukTransaksi() {
+            let html = '';
+            produkList.forEach(p => {
+                html += `<div class="col-md-6 mb-3">
+                    <div class="card p-2 border shadow-sm">
+                        <h5>${p.nama}</h5>
+                        <p class="mb-1 text-muted">Harga: Rp ${p.harga.toLocaleString()}</p>
+                        <p class="mb-2 text-muted">Stok: ${p.stok}</p>
+                        <button class="btn btn-outline-primary btn-sm" onclick="tambahKeKeranjang(${p.id})">Tambah</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('listProdukTransaksi').innerHTML = html;
+        }
 
-        cart = [];
-        saveData();
-        alert('Transaksi Berhasil!');
-        switchPage('transactions');
-    }
+        function tambahKeKeranjang(id) {
+            let produk = produkList.find(p => p.id === id);
+            if (produk.stok <= 0) {
+                alert("Stok habis!");
+                return;
+            }
+            let item = keranjang.find(i => i.id === id);
+            if (item) {
+                if(item.qty < produk.stok) {
+                    item.qty++;
+                } else {
+                    alert("Stok tidak mencukupi!");
+                }
+            } else {
+                keranjang.push({ id: produk.id, nama: produk.nama, harga: produk.harga, qty: 1 });
+            }
+            renderKeranjang();
+        }
 
-    function renderTransactions() {
-        let html = '';
-        transactions.slice().reverse().forEach((t, index) => {
-            html += `<tr>
-                <td>${index + 1}</td>
-                <td>${t.invoice}</td>
-                <td>${t.customer_name}</td>
-                <td>${formatRupiah(t.total)}</td>
-                <td>${t.created_at}</td>
-            </tr>`;
-        });
-        document.getElementById('table-transaction-body').innerHTML = html;
-    }
+        function renderKeranjang() {
+            let html = '';
+            let total = 0;
+            if (keranjang.length === 0) {
+                html = `<li class="list-group-item text-muted text-center">Keranjang kosong</li>`;
+            } else {
+                keranjang.forEach((item, index) => {
+                    let subtotal = item.harga * item.qty;
+                    total += subtotal;
+                    html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">${item.nama}</h6>
+                            <small class="text-muted">Rp ${item.harga.toLocaleString()} x ${item.qty}</small>
+                        </div>
+                        <span>Rp ${subtotal.toLocaleString()}</span>
+                        <button class="btn btn-sm btn-danger ms-2" onclick="hapusItemKeranjang(${index})">&times;</button>
+                    </li>`;
+                });
+            }
+            document.getElementById('cartList').innerHTML = html;
+            document.getElementById('cartTotal').innerText = `Rp ${total.toLocaleString()}`;
+            hitungKembalian();
+        }
 
-    // Init first load
-    updateDashboard();
-</script>
+        function hapusItemKeranjang(index) {
+            keranjang.splice(index, 1);
+            renderKeranjang();
+        }
+
+        function hitungKembalian() {
+            let total = keranjang.reduce((sum, item) => sum + (item.harga * item.qty), 0);
+            let bayar = parseInt(document.getElementById('bayarUang').value) || 0;
+            let kembalian = bayar - total;
+            document.getElementById('kembalianUang').innerText = kembalian >= 0 ? `Rp ${kembalian.toLocaleString()}` : `Uang Kurang`;
+        }
+
+        function prosesTransaksi() {
+            let total = keranjang.reduce((sum, item) => sum + (item.harga * item.qty), 0);
+            let bayar = parseInt(document.getElementById('bayarUang').value) || 0;
+            let kembalian = bayar - total;
+
+            if (keranjang.length === 0) {
+                alert("Keranjang masih kosong!");
+                return;
+            }
+            if (bayar < total) {
+                alert("Jumlah uang pembayaran kurang!");
+                return;
+            }
+
+            // Kurangi stok produk asli
+            keranjang.forEach(item => {
+                let prod = produkList.find(p => p.id === item.id);
+                if(prod) prod.stok -= item.qty;
+            });
+
+            let transaksiBaru = {
+                id: 'TRX-' + Date.now(),
+                waktu: new Date().toLocaleString(),
+                items: [...keranjang],
+                total: total,
+                bayar: bayar,
+                kembalian: kembalian
+            };
+
+            riwayatTransaksi.push(transaksiBaru);
+
+            // Reset keranjang
+            keranjang = [];
+            document.getElementById('bayarUang').value = '';
+            renderKeranjang();
+            alert("Transaksi Berhasil Disimpan!");
+            switchPage('riwayat');
+        }
+
+        // --- RIWAYAT & CETAK ---
+        function renderRiwayat() {
+            let html = '';
+            if (riwayatTransaksi.length === 0) {
+                html = `<tr><td colspan="4" class="text-center text-muted">Belum ada riwayat transaksi.</td></tr>`;
+            } else {
+                riwayatTransaksi.forEach(trx => {
+                    html += `<tr>
+                        <td>${trx.id}</td>
+                        <td>${trx.waktu}</td>
+                        <td>Rp ${trx.total.toLocaleString()}</td>
+                        <td><button class="btn btn-info btn-sm text-white" onclick="bukaStruk('${trx.id}')">Cetak Struk</button></td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('tabelRiwayat').innerHTML = html;
+        }
+
+    function bukaStruk(id) {
+            let trx = riwayatTransaksi.find(t => t.id === id);
+            if (!trx) return;
+
+            document.getElementById('strukInfo').innerHTML = `ID: ${trx.id} <br> Waktu: ${trx.waktu}`;
+            let htmlItems = '';
+            trx.items.forEach(item => {
+                htmlItems += `<tr>
+                    <td>${item.nama}</td>
+                    <td>${item.qty}</td>
+                    <td>Rp ${(item.harga * item.qty).toLocaleString()}</td>
+                </tr>`;
+            });
+            document.getElementById('strukItems').innerHTML = htmlItems;
+            document.getElementById('strukTotal').innerText = `Rp ${trx.total.toLocaleString()}`;
+            document.getElementById('strukBayar').innerText = `Rp ${trx.bayar.toLocaleString()}`;
+            document.getElementById('strukKembalian').innerText = `Rp ${trx.kembalian.toLocaleString()}`;
+
+            let modalStruk = new bootstrap.Modal(document.getElementById('modalStruk'));
+            modalStruk.show();
+        }
+    </script>
 </body>
 </html>
