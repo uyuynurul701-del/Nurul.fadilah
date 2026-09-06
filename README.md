@@ -3,200 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Kasir - Nurul Fadilah</title>
+    <title>Aplikasi Kasir Modern - Nurul Fadilah</title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f8fafc;
+        }
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover)) !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+        .product-card {
+            cursor: pointer;
+            border-left: 4px solid var(--primary-color);
+        }
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            #printArea, #printArea * {
-                visibility: visible;
-            }
-            #printArea {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; }
         }
     </style>
 </head>
-<body class="bg-light">
+<body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark py-3">
         <div class="container">
-            <a class="navbar-brand" href="#">Kasir App</a>
+            <a class="navbar-brand fw-bold" href="#"><i class="fa-solid fa-cash-register me-2"></i> Kasir Pro</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link active" href="#" onclick="switchPage('produk')">Produk</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="switchPage('transaksi')">Transaksi</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" onclick="switchPage('riwayat')">Riwayat & Cetak</a></li>
+                <ul class="navbar-nav ms-auto gap-2">
+                    <li class="nav-item"><a class="nav-link active px-3 rounded" href="#" onclick="switchPage('produk')"><i class="fa-solid fa-box-open me-1"></i> Produk</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 rounded" href="#" onclick="switchPage('transaksi')"><i class="fa-solid fa-cart-shopping me-1"></i> Transaksi POS</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 rounded" href="#" onclick="switchPage('riwayat')"><i class="fa-solid fa-clock-rotate-left me-1"></i> Riwayat & Cetak</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container my-4">
+    <!-- Konten Utama -->
+    <div class="container my-5">
 
+        <!-- HALAMAN PRODUK -->
         <div id="page-produk" class="page-content">
-            <h2 class="mb-4">Manajemen Produk</h2>
-            <div class="row">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-indigo text-primary p-3 rounded-circle me-3 bg-white shadow-sm">
+                    <i class="fa-solid fa-boxes-stacked fa-2x"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-0">Manajemen Produk</h2>
+                    <p class="text-muted mb-0">Tambah, ubah, dan pantau ketersediaan stok barang.</p>
+                </div>
+            </div>
+            
+            <div class="row g-4">
                 <div class="col-md-4">
-                    <div class="card p-3 shadow-sm mb-3">
-                        <h4>Tambah Produk</h4>
+                    <div class="card p-4">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-circle-plus text-primary me-2"></i> Tambah Produk</h5>
                         <form id="formProduk">
                             <div class="mb-3">
-                                <label class="form-label">Nama Produk</label>
-                                <input type="text" id="namaProduk" class="form-control" required>
+                                <label class="form-label text-muted small fw-bold">Nama Produk</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fa-solid fa-tag"></i></span>
+                                    <input type="text" id="namaProduk" class="form-control" placeholder="Cth: Kopi Susu" required>
+                                </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Harga (Rp)</label>
-                                <input type="number" id="hargaProduk" class="form-control" required>
+                                <label class="form-label text-muted small fw-bold">Harga (Rp)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fa-solid fa-rupiah-sign"></i></span>
+                                    <input type="number" id="hargaProduk" class="form-control" placeholder="Cth: 15000" required>
+                                </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Stok</label>
-                                <input type="number" id="stokProduk" class="form-control" required>
+                                <label class="form-label text-muted small fw-bold">Stok Awal</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fa-solid fa-cubes"></i></span>
+                                    <input type="number" id="stokProduk" class="form-control" placeholder="Cth: 20" required>
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100">Simpan Produk</button>
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold"><i class="fa-solid fa-save me-2"></i> Simpan Produk</button>
                         </form>
                     </div>
                 </div>
                 <div class="col-md-8">
-                    <div class="card p-3 shadow-sm">
-                        <h4>Daftar Produk</h4>
-                        <table class="table table-striped mt-2">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Nama Produk</th>
-                                    <th>Harga</th>
-                                    <th>Stok</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelProduk">
-                                </tbody>
-                        </table>
+                    <div class="card p-4">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-list text-primary me-2"></i> Daftar Katalog Produk</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mt-2">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nama Produk</th>
+                                        <th>Harga</th>
+                                        <th>Stok</th>
+                                        <th class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelProduk"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- HALAMAN TRANSAKSI (POS) -->
         <div id="page-transaksi" class="page-content d-none">
-            <h2 class="mb-4">Halaman Transaksi (Kasir)</h2>
-            <div class="row">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-white text-success p-3 rounded-circle me-3 shadow-sm">
+                    <i class="fa-solid fa-cash-register fa-2x"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-0">Kasir / Point of Sales</h2>
+                    <p class="text-muted mb-0">Pilih produk untuk dimasukkan ke keranjang belanja.</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
                 <div class="col-md-7">
-                    <div class="card p-3 shadow-sm">
-                        <h4>Pilih Produk</h4>
-                        <div class="row" id="listProdukTransaksi">
-                            </div>
+                    <div class="card p-4">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-store text-success me-2"></i> Katalog Tersedia</h5>
+                        <div class="row g-3" id="listProdukTransaksi"></div>
                     </div>
                 </div>
                 <div class="col-md-5">
-                    <div class="card p-3 shadow-sm">
-                        <h4>Keranjang Belanja</h4>
-                        <ul class="list-group my-3" id="cartList">
-                            <li class="list-group-item text-muted text-center">Keranjang kosong</li>
+                    <div class="card p-4 bg-white border">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-shopping-cart text-primary me-2"></i> Keranjang Belanja</h5>
+                        <ul class="list-group my-3 overflow-auto" id="cartList" style="max-height: 220px;">
+                            <li class="list-group-item text-muted text-center py-4 border-0 bg-light rounded">
+                                <i class="fa-solid fa-basket-shopping fa-2x mb-2 d-none d-block"></i>
+                                Keranjang masih kosong
+                            </li>
                         </ul>
-                        <h5>Total: <span id="cartTotal" class="text-success">Rp 0</span></h5>
-                        <div class="mb-3 mt-2">
-                            <label class="form-label">Bayar (Rp)</label>
-                            <input type="number" id="bayarUang" class="form-control" oninput="hitungKembalian()">
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="fw-bold fs-5">Total Tagihan:</span>
+                            <span id="cartTotal" class="fw-bold fs-4 text-success">Rp 0</span>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Kembalian:</label>
-                            <h5 id="kembalianUang" class="text-primary">Rp 0</h5>
+                            <label class="form-label text-muted small fw-bold">Nominal Pembayaran (Rp)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fa-solid fa-wallet"></i></span>
+                                <input type="number" id="bayarUang" class="form-control" placeholder="Masukkan uang..." oninput="hitungKembalian()">
+                            </div>
                         </div>
-                        <button class="btn btn-success w-100" onclick="prosesTransaksi()">Selesaikan Transaksi</button>
+                        <div class="mb-4 bg-light p-3 rounded">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold text-muted">Kembalian:</span>
+                                <span id="kembalianUang" class="fw-bold text-primary fs-5">Rp 0</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-success w-100 py-2 fw-bold text-uppercase" onclick="prosesTransaksi()"><i class="fa-solid fa-circle-check me-2"></i> Selesaikan Transaksi</button>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- HALAMAN RIWAYAT & CETAK -->
         <div id="page-riwayat" class="page-content d-none">
-            <h2 class="mb-4">Riwayat & Cetak Transaksi</h2>
-            <div class="card p-3 shadow-sm">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>ID Transaksi</th>
-                            <th>Waktu</th>
-                            <th>Total Belanja</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabelRiwayat">
-                        </tbody>
-                </table>
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-white text-info p-3 rounded-circle me-3 shadow-sm">
+                    <i class="fa-solid fa-receipt fa-2x"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-0">Riwayat & Cetak Struk</h2>
+                    <p class="text-muted mb-0">Daftar seluruh transaksi yang berhasil diproses.</p>
+                </div>
+            </div>
+
+            <div class="card p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID Transaksi</th>
+                                <th>Waktu</th>
+                                <th>Total Belanja</th>
+                                <th class="text-center">Aksi Struk</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelRiwayat"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
     </div>
 
+    <!-- Modal Cetak Struk -->
     <div class="modal fade" id="modalStruk" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Struk Pembayaran</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="fa-solid fa-print me-2"></i> Struk Pembayaran</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="printArea">
-                    <div class="text-center">
-                        <h4>TOKO KASIR BERKAH</h4>
-                        <p class="mb-1">Jl. Contoh No. 123, Indonesia</p>
-                        <hr>
+                <div class="modal-body p-4" id="printArea">
+                    <div class="text-center mb-3">
+                        <h4 class="fw-bold mb-0"><i class="fa-solid fa-shop text-primary"></i> TOKO KASIR BERKAH</h4>
+                        <p class="text-muted small mb-1">Jl. Inovasi Teknologi No. 45, Indonesia</p>
+                        <hr class="border-dashed">
                     </div>
-                    <p id="strukInfo" class="mb-1"></p>
-                    <table class="table table-sm mt-2">
+                    <div class="small mb-3" id="strukInfo"></div>
+                    <table class="table table-sm table-borderless small">
                         <thead>
-                            <tr>
+                            <tr class="border-bottom">
                                 <th>Item</th>
-                                <th>Qty</th>
-                                <th>Subtotal</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody id="strukItems"></tbody>
                     </table>
-                    <hr>
-                    <div class="d-flex justify-content-between">
-                        <strong>Total:</strong>
-                        <span id="strukTotal"></span>
+                    <hr class="border-dashed">
+                    <div class="d-flex justify-content-between small">
+                        <span>Total Belanja:</span>
+                        <strong id="strukTotal"></strong>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <strong>Bayar:</strong>
+                    <div class="d-flex justify-content-between small">
+                        <span>Tunai Dibayar:</span>
                         <span id="strukBayar"></span>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <strong>Kembalian:</strong>
+                    <div class="d-flex justify-content-between small mb-3">
+                        <span>Kembalian:</span>
                         <span id="strukKembalian"></span>
                     </div>
-                    <div class="text-center mt-4">
-                        <p class="mb-0">Terima Kasih Telah Berbelanja!</p>
-                        <small class="text-muted">Kasir App by Nurul Fadilah</small>
+                    <hr class="border-dashed">
+                    <div class="text-center mt-3">
+                        <p class="mb-1 fw-bold text-success small">Terima Kasih Atas Kunjungan Anda!</p>
+                        <small class="text-muted" style="font-size: 11px;">Aplikasi Kasir by <strong>Nurul Fadilah</strong></small>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <button type="button" class="btn btn-primary" onclick="window.print()">Cetak Struk</button>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"><i class="fa-solid fa-xmark me-1"></i> Tutup</button>
+                    <button type="button" class="btn btn-primary btn-sm px-4" onclick="window.print()"><i class="fa-solid fa-print me-1"></i> Cetak Sekarang</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="text-center py-4 mt-5 bg-white border-top">
-        <p class="mb-0 text-muted">Aplikasi Kasir Web &copy; 2026 | Dibuat oleh <strong>Nurul Fadilah</strong></p>
+    <!-- Footer -->
+    <footer class="text-center py-4 bg-white border-top mt-5">
+        <p class="text-muted small mb-0"><i class="fa-solid fa-code text-primary me-1"></i> Aplikasi Kasir Web Modern &copy; 2026 | Dibuat dengan penuh dedikasi oleh <strong class="text-dark">Nurul Fadilah</strong></p>
     </footer>
 
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- JavaScript Aplikasi -->
     <script>
         let produkList = [
-            { id: 1, nama: "Kopi Hitam", harga: 5000, stok: 20 },
-            { id: 2, nama: "Roti Bakar", harga: 10000, stok: 15 }
+            { id: 1, nama: "Kopi Hitam Arabica", harga: 12000, stok: 20 },
+            { id: 2, nama: "Roti Bakar Keju", harga: 15000, stok: 15 },
+            { id: 3, nama: "Es Teh Manis", harga: 5000, stok: 30 }
         ];
         let keranjang = [];
         let riwayatTransaksi = [];
@@ -205,15 +293,14 @@
             document.querySelectorAll('.page-content').forEach(el => el.classList.add('d-none'));
             document.getElementById('page-' + pageId).classList.remove('d-none');
             
-            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-            event.target.classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active', 'bg-white', 'text-dark'));
+            event.currentTarget.classList.add('active');
 
             if (pageId === 'produk') renderProduk();
             if (pageId === 'transaksi') renderProdukTransaksi();
             if (pageId === 'riwayat') renderRiwayat();
         }
 
-        // --- MANAJEMEN PRODUK ---
         document.getElementById('formProduk').addEventListener('submit', function(e) {
             e.preventDefault();
             const nama = document.getElementById('namaProduk').value;
@@ -230,10 +317,12 @@
             produkList.forEach((p, index) => {
                 html += `<tr>
                     <td>${index + 1}</td>
-                    <td>${p.nama}</td>
-                    <td>Rp ${p.harga.toLocaleString()}</td>
-                    <td>${p.stok}</td>
-                    <td><button class="btn btn-danger btn-sm" onclick="hapusProduk(${p.id})">Hapus</button></td>
+                    <td class="fw-bold">${p.nama}</td>
+                    <td class="text-success fw-semibold">Rp ${p.harga.toLocaleString()}</td>
+                    <td><span class="badge bg-secondary">${p.stok} unit</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-outline-danger btn-sm" onclick="hapusProduk(${p.id})"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                    </td>
                 </tr>`;
             });
             document.getElementById('tabelProduk').innerHTML = html;
@@ -244,16 +333,17 @@
             renderProduk();
         }
 
-        // --- TRANSAKSI / POS ---
         function renderProdukTransaksi() {
             let html = '';
             produkList.forEach(p => {
-                html += `<div class="col-md-6 mb-3">
-                    <div class="card p-2 border shadow-sm">
-                        <h5>${p.nama}</h5>
-                        <p class="mb-1 text-muted">Harga: Rp ${p.harga.toLocaleString()}</p>
-                        <p class="mb-2 text-muted">Stok: ${p.stok}</p>
-                        <button class="btn btn-outline-primary btn-sm" onclick="tambahKeKeranjang(${p.id})">Tambah</button>
+                html += `<div class="col-md-6">
+                    <div class="card p-3 product-card shadow-sm h-100" onclick="tambahKeKeranjang(${p.id})">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="fw-bold mb-1">${p.nama}</h6>
+                            <span class="badge bg-light text-dark border"><i class="fa-solid fa-box text-muted me-1"></i> ${p.stok}</span>
+                        </div>
+                        <p class="text-success fw-bold mb-2">Rp ${p.harga.toLocaleString()}</p>
+                        <button class="btn btn-sm btn-primary w-100 mt-auto"><i class="fa-solid fa-cart-plus me-1"></i> Tambah</button>
                     </div>
                 </div>`;
             });
@@ -263,7 +353,7 @@
         function tambahKeKeranjang(id) {
             let produk = produkList.find(p => p.id === id);
             if (produk.stok <= 0) {
-                alert("Stok habis!");
+                alert("Stok produk ini sudah habis!");
                 return;
             }
             let item = keranjang.find(i => i.id === id);
@@ -271,7 +361,7 @@
                 if(item.qty < produk.stok) {
                     item.qty++;
                 } else {
-                    alert("Stok tidak mencukupi!");
+                    alert("Stok maksimum tercapai!");
                 }
             } else {
                 keranjang.push({ id: produk.id, nama: produk.nama, harga: produk.harga, qty: 1 });
@@ -283,18 +373,20 @@
             let html = '';
             let total = 0;
             if (keranjang.length === 0) {
-                html = `<li class="list-group-item text-muted text-center">Keranjang kosong</li>`;
+                html = `<li class="list-group-item text-muted text-center py-4 border-0 bg-light rounded"><i class="fa-solid fa-basket-shopping fa-2x mb-2 d-block"></i>Keranjang kosong</li>`;
             } else {
                 keranjang.forEach((item, index) => {
                     let subtotal = item.harga * item.qty;
                     total += subtotal;
-                    html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                    html += `<li class="list-group-item d-flex justify-content-between align-items-center border-0 bg-light mb-2 rounded">
                         <div>
-                            <h6 class="mb-0">${item.nama}</h6>
-                            <small class="text-muted">Rp ${item.harga.toLocaleString()} x ${item.qty}</small>
+                            <h6 class="mb-0 fw-bold">${item.nama}</h6>
+                            <small class="text-muted">Rp ${item.harga.toLocaleString()} × ${item.qty}</small>
                         </div>
-                        <span>Rp ${subtotal.toLocaleString()}</span>
-                        <button class="btn btn-sm btn-danger ms-2" onclick="hapusItemKeranjang(${index})">&times;</button>
+                        <div class="text-end">
+                            <span class="fw-bold text-success d-block">Rp ${subtotal.toLocaleString()}</span>
+                            <button class="btn btn-link text-danger btn-sm p-0 text-decoration-none" onclick="hapusItemKeranjang(${index})"><i class="fa-solid fa-trash"></i> Hapus</button>
+                        </div>
                     </li>`;
                 });
             }
@@ -321,22 +413,21 @@
             let kembalian = bayar - total;
 
             if (keranjang.length === 0) {
-                alert("Keranjang masih kosong!");
+                alert("Keranjang belanja masih kosong!");
                 return;
             }
             if (bayar < total) {
-                alert("Jumlah uang pembayaran kurang!");
+                alert("Nominal pembayaran uang kurang!");
                 return;
             }
 
-            // Kurangi stok produk asli
             keranjang.forEach(item => {
                 let prod = produkList.find(p => p.id === item.id);
                 if(prod) prod.stok -= item.qty;
             });
 
             let transaksiBaru = {
-                id: 'TRX-' + Date.now(),
+                id: 'TRX-' + Math.floor(100000 + Math.random() * 900000),
                 waktu: new Date().toLocaleString(),
                 items: [...keranjang],
                 total: total,
@@ -345,44 +436,43 @@
             };
 
             riwayatTransaksi.push(transaksiBaru);
-
-            // Reset keranjang
             keranjang = [];
             document.getElementById('bayarUang').value = '';
             renderKeranjang();
-            alert("Transaksi Berhasil Disimpan!");
+            alert("Transaksi berhasil diproses!");
             switchPage('riwayat');
         }
 
-        // --- RIWAYAT & CETAK ---
         function renderRiwayat() {
             let html = '';
             if (riwayatTransaksi.length === 0) {
-                html = `<tr><td colspan="4" class="text-center text-muted">Belum ada riwayat transaksi.</td></tr>`;
+                html = `<tr><td colspan="4" class="text-center text-muted py-4">Belum ada riwayat transaksi tercatat.</td></tr>`;
             } else {
                 riwayatTransaksi.forEach(trx => {
                     html += `<tr>
-                        <td>${trx.id}</td>
-                        <td>${trx.waktu}</td>
-                        <td>Rp ${trx.total.toLocaleString()}</td>
-                        <td><button class="btn btn-info btn-sm text-white" onclick="bukaStruk('${trx.id}')">Cetak Struk</button></td>
+                        <td class="fw-bold text-primary">${trx.id}</td>
+                        <td class="text-muted small"><i class="fa-regular fa-clock me-1"></i> ${trx.waktu}</td>
+                        <td class="fw-bold text-success">Rp ${trx.total.toLocaleString()}</td>
+                        <td class="text-center">
+                            <button class="btn btn-info btn-sm text-white px-3" onclick="bukaStruk('${trx.id}')"><i class="fa-solid fa-receipt me-1"></i> Cetak Struk</button>
+                        </td>
                     </tr>`;
                 });
             }
             document.getElementById('tabelRiwayat').innerHTML = html;
         }
 
-    function bukaStruk(id) {
+        function bukaStruk(id) {
             let trx = riwayatTransaksi.find(t => t.id === id);
             if (!trx) return;
 
-            document.getElementById('strukInfo').innerHTML = `ID: ${trx.id} <br> Waktu: ${trx.waktu}`;
+            document.getElementById('strukInfo').innerHTML = `<strong>ID:</strong> ${trx.id} <br><strong>Waktu:</strong> ${trx.waktu}`;
             let htmlItems = '';
             trx.items.forEach(item => {
                 htmlItems += `<tr>
                     <td>${item.nama}</td>
-                    <td>${item.qty}</td>
-                    <td>Rp ${(item.harga * item.qty).toLocaleString()}</td>
+                    <td class="text-center">${item.qty}</td>
+                    <td class="text-end">Rp ${(item.harga * item.qty).toLocaleString()}</td>
                 </tr>`;
             });
             document.getElementById('strukItems').innerHTML = htmlItems;
