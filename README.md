@@ -1,471 +1,520 @@
+<?php
+session_start();
+
+$host = "localhost";
+$user = "root";
+$pass = "";
+$db   = "kasir_app";
+
+$conn = mysqli_connect($host, $user, $pass);
+
+if (!$conn) {
+    die("Koneksi gagal");
+}
+
+mysqli_query($conn, "CREATE DATABASE IF NOT EXISTS $db");
+mysqli_select_db($conn, $db);
+
+// TABEL PRODUK
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS products(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(200),
+    price INT,
+    stock INT,
+    category VARCHAR(100),
+    expired_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// TABEL CUSTOMER
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS customers(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    phone VARCHAR(20),
+    address TEXT,
+    email VARCHAR(100)
+)");
+
+// TABEL TRANSAKSI
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS transactions(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    invoice VARCHAR(100),
+    customer_name VARCHAR(100),
+    total INT,
+    pay INT,
+    change_money INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// TABEL DETAIL TRANSAKSI
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS transaction_details(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    invoice VARCHAR(100),
+    product_name VARCHAR(100),
+    qty INT,
+    price INT,
+    subtotal INT
+)");
+
+// LOGIN
+$defaultUser = "admin";
+$defaultPass = "12345";
+
+if (isset($_POST['login'])) {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    if ($username == $defaultUser && $password == $defaultPass) {
+        $_SESSION['login'] = true;
+        header("Location: index.php");
+        exit;
+    } else {
+        $error = "Username atau Password salah";
+    }
+}
+
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header("Location: index.php");
+    exit;
+}
+
+// CRUD PRODUK
+if (isset($_POST['add_product'])) {
+    $name = $_POST['name'];
+    $price = $_POST['price'];
+    $stock = $_POST['stock'];
+    $category = $_POST['category'];
+    $expired = $_POST['expired_date'];
+
+    mysqli_query($conn, "INSERT INTO products(name,price,stock,category,expired_date) VALUES('$name','$price','$stock','$category','$expired')");
+    header("Location: index.php?page=products");
+    exit;
+}
+
+if (isset($_GET['delete_product'])) {
+    $id = $_GET['delete_product'];
+    mysqli_query($conn, "DELETE FROM products WHERE id='$id'");
+    header("Location: index.php?page=products");
+    exit;
+}
+
+// CRUD CUSTOMER
+if (isset($_POST['add_customer'])) {
+    $name = $_POST['name'];
+    $phone = $_POST['phone'];
+    $address = $_POST['address'];
+    $email = $_POST['email'];
+
+    mysqli_query($conn, "INSERT INTO customers(name,phone,address,email) VALUES('$name','$phone','$address','$email')");
+    header("Location: index.php?page=customers");
+    exit;
+}
+
+if (isset($_GET['delete_customer'])) {
+    $id = $_GET['delete_customer'];
+    mysqli_query($conn, "DELETE FROM customers WHERE id='$id'");
+    header("Location: index.php?page=customers");
+    exit;
+}
+
+// KERANJANG
+if (!isset($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
+}
+
+if (isset($_GET['add_cart'])) {
+    $id = $_GET['add_cart'];
+    $data = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM products WHERE id='$id'"));
+    $found = false;
+
+    foreach ($_SESSION['cart'] as $key => $item) {
+        if ($item['id'] == $id) {
+            $_SESSION['cart'][$key]['qty'] += 1;
+            $found = true;
+        }
+    }
+
+    if (!$found) {
+        $_SESSION['cart'][] = [
+            'id' => $data['id'],
+            'name' => $data['name'],
+            'price' => $data['price'],
+            'qty' => 1
+        ];
+    }
+    header("Location: index.php?page=cashier");
+    exit;
+}
+
+if (isset($_GET['remove_cart'])) {
+    $index = $_GET['remove_cart'];
+    unset($_SESSION['cart'][$index]);
+    $_SESSION['cart'] = array_values($_SESSION['cart']);
+    header("Location: index.php?page=cashier");
+    exit;
+}
+
+// CHECKOUT
+if (isset($_POST['checkout'])) {
+    $customer = $_POST['customer_name'];
+    $pay = $_POST['pay'];
+    $invoice = "INV" . time();
+    $total = 0;
+
+    foreach ($_SESSION['cart'] as $item) {
+        $total += $item['price'] * $item['qty'];
+    }
+
+    if ($pay < $total) {
+        echo "<script>alert('Uang bayar kurang!'); window.location='index.php?page=cashier';</script>";
+        exit;
+    }
+
+    $change = $pay - $total;
+
+    mysqli_query($conn, "INSERT INTO transactions(invoice,customer_name,total,pay,change_money) VALUES('$invoice','$customer','$total','$pay','$change')");
+
+    foreach ($_SESSION['cart'] as $item) {
+        $subtotal = $item['price'] * $item['qty'];
+        mysqli_query($conn, "INSERT INTO transaction_details(invoice,product_name,qty,price,subtotal) VALUES('$invoice', '{$item['name']}', '{$item['qty']}', '{$item['price']}', '$subtotal')");
+        mysqli_query($conn, "UPDATE products SET stock = stock - {$item['qty']} WHERE id='{$item['id']}'");
+    }
+
+    $_SESSION['last_invoice'] = $invoice;
+    $_SESSION['cart'] = [];
+    header("Location: index.php?page=receipt");
+    exit;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <title>Aplikasi Kasir Modern</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Kasir - Nurul Fadilah</title>
-    <!-- Google Fonts & FontAwesome -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #0f172a; color: #f8fafc; }
 
-        body {
-            background-color: #f4f7f6;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+        .login-box {
+            width: 100%; max-width: 400px; background: #1e293b; margin: 100px auto; padding: 40px;
+            border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
+        .login-box h1 { text-align: center; margin-bottom: 25px; font-size: 24px; }
 
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        input, select, textarea {
+            width: 100%; padding: 12px 16px; border: 1px solid #334155; border-radius: 8px;
+            margin-top: 12px; background: #0f172a; color: #fff; outline: none; transition: 0.2s;
         }
+        input:focus, select:focus, textarea:focus { border-color: #3b82f6; }
 
-        header h1 {
-            font-size: 24px;
-            font-weight: 600;
+        button {
+            padding: 12px 20px; border: none; border-radius: 8px; background: #3b82f6;
+            color: white; font-weight: 600; cursor: pointer; margin-top: 12px; transition: 0.2s; width: 100%;
         }
+        button:hover { background: #2563eb; }
 
-        header p {
-            font-size: 14px;
-            opacity: 0.9;
+        .sidebar {
+            width: 260px; background: #1e293b; height: 100vh; position: fixed; padding: 20px;
+            border-right: 1px solid #334155;
         }
-
-        .container {
-            display: flex;
-            flex: 1;
-            padding: 20px;
-            gap: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
+        .sidebar h2 { margin-bottom: 30px; text-align: center; color: #3b82f6; }
+        .sidebar a {
+            display: block; color: #94a3b8; text-decoration: none; padding: 12px 16px;
+            margin-top: 8px; border-radius: 8px; font-weight: 500; transition: 0.2s;
         }
+        .sidebar a:hover { background: #334155; color: #fff; }
 
-        /* Bagian Produk */
-        .products-section {
-            flex: 2;
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
+        .main { margin-left: 260px; padding: 30px; }
+
+        .card-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px;
         }
+        .card { background: #1e293b; padding: 24px; border-radius: 16px; border: 1px solid #334155; }
+        .card h3 { color: #94a3b8; font-size: 14px; }
+        .card h2 { font-size: 28px; margin-top: 8px; color: #f8fafc; }
 
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #444;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; border-radius: 12px; overflow: hidden; }
+        table th { background: #334155; padding: 14px; text-align: center; font-size: 14px; color: #cbd5e1; }
+        table td { padding: 14px; text-align: center; border-top: 1px solid #334155; font-size: 14px; color: #e2e8f0; }
+
+        .topbar { background: #1e293b; padding: 20px 24px; border-radius: 16px; margin-bottom: 20px; border: 1px solid #334155; }
+        .topbar h1 { font-size: 22px; }
+
+        .danger { background: rgba(220, 38, 38, 0.2); color: #fca5a5; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #dc2626; text-align: center; }
+
+        .receipt {
+            background: white; color: black; width: 100%; max-width: 400px; margin: 0 auto;
+            padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
+        .receipt h2 { text-align: center; margin-bottom: 15px; }
+        .receipt table { background: white; }
+        .receipt table th, .receipt table td { background: white; color: black; border-color: #ddd; }
 
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 15px;
-            overflow-y: auto;
-            max-height: 500px;
-            padding-right: 5px;
+        .flex { display: flex; gap: 20px; }
+        .w-50 { width: 50%; }
+
+        .grid-product {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;
         }
+        .product-card { background: #1e293b; padding: 16px; border-radius: 12px; border: 1px solid #334155; }
+        .product-card h3 { font-size: 16px; margin-bottom: 6px; }
+        .product-card p { font-size: 13px; color: #94a3b8; margin-bottom: 4px; }
+        .product-card button { width: 100%; margin-top: 8px; padding: 8px; }
 
-        .product-card {
-            background: #fff;
-            border: 2px solid #eee;
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
+        .btn-danger { background: #dc2626; }
+        .btn-danger:hover { background: #b91c1c; }
 
-        .product-card:hover {
-            border-color: #667eea;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.15);
-        }
-
-        .product-card i {
-            font-size: 35px;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-
-        .product-card h4 {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .product-card .price {
-            font-size: 13px;
-            font-weight: 600;
-            color: #27ae60;
-        }
-
-        /* Bagian Keranjang / Kasir */
-        .cart-section {
-            flex: 1;
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .cart-items {
-            flex: 1;
-            overflow-y: auto;
-            max-height: 250px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #eee;
-            padding-right: 5px;
-        }
-
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 13px;
-            background: #f9f9f9;
-            padding: 8px 10px;
-            border-radius: 8px;
-        }
-
-        .cart-item-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .cart-item-info span:last-child {
-            color: #777;
-            font-size: 11px;
-        }
-
-        .cart-item-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .cart-item-actions button {
-            background: #eee;
-            border: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .cart-item-actions button:hover {
-            background: #ddd;
-        }
-
-        .cart-summary {
-            font-size: 14px;
-        }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-
-        .summary-row.total {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2c3e50;
-            border-top: 2px dashed #eee;
-            padding-top: 8px;
-            margin-top: 8px;
-        }
-
-        .payment-box {
-            margin-top: 10px;
-        }
-
-        .payment-box label {
-            font-size: 12px;
-            font-weight: 500;
-            color: #555;
-        }
-
-        .payment-box input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-top: 5px;
-            font-size: 14px;
-        }
-
-        .btn-checkout {
-            background: #27ae60;
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: background 0.3s;
-        }
-
-        .btn-checkout:hover {
-            background: #219653;
-        }
-
-        footer {
-            text-align: center;
-            padding: 15px;
-            background: #fff;
-            color: #777;
-            font-size: 13px;
-            border-top: 1px solid #eee;
-        }
-
-        /* Responsif untuk HP */
-        @media (max-width: 900px) {
-            .container {
-                flex-direction: column;
-            }
+        @media(max-width: 768px) {
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .main { margin-left: 0; padding: 15px; }
+            .flex { flex-direction: column; }
+            .w-50 { width: 100%; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <header>
-        <div>
-            <h1><i class="fa-solid fa-cash-register"></i> Aplikasi Kasir</h1>
-            <p>Sistem Point of Sale Modern</p>
-        </div>
-        <div>
-            <p><i class="fa-solid fa-user-shield">️</i> Dibuat oleh: <strong>Nurul Fadilah</strong></p>
-        </div>
-    </header>
+<?php if(!isset($_SESSION['login'])): ?>
+<div class="login-box">
+    <h1>LOGIN KASIR</h1>
+    <?php if(isset($error)): ?>
+        <div class="danger"><?php echo $error; ?></div>
+    <?php endif; ?>
+    <form method="POST">
+        <input type="text" name="username" placeholder="Username" required autocomplete="off">
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit" name="login">LOGIN</button>
+    </form>
+</div>
+<?php else: ?>
 
-    <!-- Konten Utama -->
-    <div class="container">
-        <!-- Daftar Produk -->
-        <div class="products-section">
-            <div class="section-title"><i class="fa-solid fa-box-open"></i> Pilih Produk</div>
-            <div class="product-grid" id="productGrid">
-                <!-- Produk akan dimuat lewat JavaScript -->
-            </div>
-        </div>
+<div class="sidebar">
+    <h2>KASIR APP</h2>
+    <a href="index.php">Dashboard</a>
+    <a href="index.php?page=products">Produk</a>
+    <a href="index.php?page=customers">Customer</a>
+    <a href="index.php?page=cashier">Kasir</a>
+    <a href="index.php?page=transactions">Transaksi</a>
+    <a href="index.php?logout=true" style="color: #fca5a5;">Logout</a>
+</div>
 
-        <!-- Keranjang & Pembayaran -->
-        <div class="cart-section">
-            <div>
-                <div class="section-title"><i class="fa-solid fa-cart-shopping"></i> Keranjang Belanja</div>
-                <div class="cart-items" id="cartItems">
-                    <p style="text-align: center; color: #aaa; margin-top: 20px; font-size: 13px;">Keranjang masih kosong</p>
-                </div>
-            </div>
+<div class="main">
+<?php
+$page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
+?>
 
-            <div class="cart-summary">
-                <div class="summary-row total">
-                    <span>Total:</span>
-                    <span id="grandTotal">Rp 0</span>
-                </div>
-                
-                <div class="payment-box">
-                    <label for="cashAmount">Uang Tunai (Rp):</label>
-                    <input type="number" id="cashAmount" placeholder="Masukkan jumlah uang..." oninput="calculateChange()">
-                </div>
+<?php if($page == 'dashboard'): ?>
+<div class="topbar"><h1>Dashboard</h1></div>
+<?php
+$totalProduct = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM products"));
+$totalCustomer = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM customers"));
+$totalTransaction = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM transactions"));
+$income = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(total) as income FROM transactions"))['income'] ?? 0;
+?>
+<div class="card-grid">
+    <div class="card"><h3>Total Produk</h3><h2><?php echo $totalProduct; ?></h2></div>
+    <div class="card"><h3>Total Customer</h3><h2><?php echo $totalCustomer; ?></h2></div>
+    <div class="card"><h3>Total Transaksi</h3><h2><?php echo $totalTransaction; ?></h2></div>
+    <div class="card"><h3>Total Pendapatan</h3><h2>Rp <?php echo number_format($income); ?></h2></div>
+</div>
+<?php endif; ?>
 
-                <div class="summary-row" style="margin-top: 10px;">
-                    <span style="font-size: 13px; color: #555;">Kembalian:</span>
-                    <span id="changeAmount" style="font-weight: 600; color: #2980b9;">Rp 0</span>
-                </div>
-
-                <button class="btn-checkout" onclick="processPayment()"><i class="fa-solid fa-check"></i> Bayar & Cetak Struk</button>
-            </div>
-        </div>
+<?php if($page == 'products'): ?>
+<div class="topbar"><h1>Manajemen Produk</h1></div>
+<div class="flex">
+    <div class="w-50">
+        <form method="POST">
+            <input type="text" name="name" placeholder="Nama Produk" required>
+            <input type="number" name="price" placeholder="Harga" required>
+            <input type="number" name="stock" placeholder="Stok" required>
+            <input type="text" name="category" placeholder="Kategori" required>
+            <input type="date" name="expired_date" required>
+            <button type="submit" name="add_product">Tambah Produk</button>
+        </form>
     </div>
+    <div class="w-50">
+        <table>
+            <tr>
+                <th>Nama</th>
+                <th>Harga</th>
+                <th>Stok</th>
+                <th>Aksi</th>
+            </tr>
+            <?php
+            $products = mysqli_query($conn, "SELECT * FROM products ORDER BY id DESC");
+            while($p = mysqli_fetch_assoc($products)):
+            ?>
+            <tr>
+                <td><?php echo $p['name']; ?></td>
+                <td>Rp <?php echo number_format($p['price']); ?></td>
+                <td><?php echo $p['stock']; ?></td>
+                <td><a href="index.php?page=products&delete_product=<?php echo $p['id']; ?>"><button class="btn-danger" style="margin:0; padding:6px 12px;">Hapus</button></a></td>
+            </tr>
+            <?php endwhile; ?>
+        </table>
+    </div>
+</div>
+<?php endif; ?>
 
-    <!-- Footer -->
-    <footer>
-        <p>&copy; 2026 Aplikasi Kasir Profesional | Dibuat dengan ❤️ oleh <strong>Nurul Fadilah</strong></p>
-    </footer>
+<?php if($page == 'customers'): ?>
+<div class="topbar"><h1>Manajemen Customer</h1></div>
+<div class="flex">
+    <div class="w-50">
+        <form method="POST">
+            <input type="text" name="name" placeholder="Nama Customer" required>
+            <input type="text" name="phone" placeholder="Nomor HP" required>
+            <textarea name="address" placeholder="Alamat"></textarea>
+            <input type="email" name="email" placeholder="Email">
+            <button type="submit" name="add_customer">Tambah Customer</button>
+        </form>
+    </div>
+    <div class="w-50">
+        <table>
+            <tr>
+                <th>Nama</th>
+                <th>HP</th>
+                <th>Aksi</th>
+            </tr>
+            <?php
+            $customers = mysqli_query($conn, "SELECT * FROM customers ORDER BY id DESC");
+            while($c = mysqli_fetch_assoc($customers)):
+            ?>
+            <tr>
+                <td><?php echo $c['name']; ?></td>
+                <td><?php echo $c['phone']; ?></td>
+                <td><a href="index.php?page=customers&delete_customer=<?php echo $c['id']; ?>"><button class="btn-danger" style="margin:0; padding:6px 12px;">Hapus</button></a></td>
+            </tr>
+            <?php endwhile; ?>
+        </table>
+    </div>
+</div>
+<?php endif; ?>
 
-    <!-- JavaScript -->
-    <script>
-        // Data Produk
-        const products = [
-            { id: 1, name: "Kopi Espresso", price: 18000, icon: "fa-mug-hot" },
-            { id: 2, name: "Caffe Latte", price: 22000, icon: "fa-coffee" },
-            { id: 3, name: "Juice Alpukat", price: 15000, icon: "fa-glass-water" },
-            { id: 4, name: "Es Teh Manis", price: 5000, icon: "fa-cup-straw" },
-            { id: 5, name: "Roti Bakar", price: 12000, icon: "fa-bread-slice" },
-            { id: 6, name: "Nasi Goreng", price: 25000, icon: "fa-bowl-food" },
-            { id: 7, name: "Mie Goreng", price: 20000, icon: "fa-plate-wheat" },
-            { id: 8, name: "Kentang Goreng", price: 14000, icon: "fa-utensils" }
-        ];
+<?php if($page == 'cashier'): ?>
+<div class="topbar"><h1>Kasir / Penjualan</h1></div>
+<h3>Pilih Produk</h3>
+<div class="grid-product">
+    <?php
+    $products = mysqli_query($conn, "SELECT * FROM products WHERE stock > 0 ORDER BY id DESC");
+    while($p = mysqli_fetch_assoc($products)):
+    ?>
+    <div class="product-card">
+        <h3><?php echo $p['name']; ?></h3>
+        <p>Harga: Rp <?php echo number_format($p['price']); ?></p>
+        <p>Stok: <?php echo $p['stock']; ?></p>
+        <a href="index.php?page=cashier&add_cart=<?php echo $p['id']; ?>"><button>Tambah</button></a>
+    </div>
+    <?php endwhile; ?>
+</div>
 
-        let cart = [];
+<h3 style="margin-top:30px;">Keranjang Belanja</h3>
+<table>
+    <tr>
+        <th>No</th>
+        <th>Nama Produk</th>
+        <th>Harga</th>
+        <th>Qty</th>
+        <th>Subtotal</th>
+        <th>Aksi</th>
+    </tr>
+    <?php
+    $no = 1;
+    $total = 0;
+    foreach($_SESSION['cart'] as $index => $cart):
+        $subtotal = $cart['price'] * $cart['qty'];
+        $total += $subtotal;
+    ?>
+    <tr>
+        <td><?php echo $no++; ?></td>
+        <td><?php echo $cart['name']; ?></td>
+        <td>Rp <?php echo number_format($cart['price']); ?></td>
+        <td><?php echo $cart['qty']; ?></td>
+        <td>Rp <?php echo number_format($subtotal); ?></td>
+        <td><a href="index.php?page=cashier&remove_cart=<?php echo $index; ?>"><button class="btn-danger" style="margin:0; padding:6px 12px;">Hapus</button></a></td>
+    </tr>
+    <?php endforeach; ?>
+    <tr>
+        <td colspan="4"><b>Total Pembayaran</b></td>
+        <td colspan="2"><b>Rp <?php echo number_format($total); ?></b></td>
+    </tr>
+</table>
 
-        // Tampilkan Produk ke Layar
-        function displayProducts() {
-            const grid = document.getElementById('productGrid');
-            grid.innerHTML = "";
-            products.forEach(product => {
-                grid.innerHTML += `
-                    <div class="product-card" onclick="addToCart(${product.id})">
-                        <i class="fa-solid ${product.icon}"></i>
-                        <div>
-                            <h4>${product.name}</h4>
-                            <div class="price">Rp ${product.price.toLocaleString('id-ID')}</div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
+<?php if(!empty($_SESSION['cart'])): ?>
+<form method="POST" style="margin-top:20px; background:#1e293b; padding:20px; border-radius:12px; border:1px solid #334155;">
+    <input type="text" name="customer_name" placeholder="Nama Customer" required>
+    <input type="number" name="pay" placeholder="Jumlah Uang Bayar" required>
+    <button type="submit" name="checkout" style="background:#16a34a;">Proses Checkout</button>
+</form>
+<?php endif; ?>
+<?php endif; ?>
 
-        // Tambah ke Keranjang
-        function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
-            const cartItem = cart.find(item => item.id === productId);
+<?php if($page == 'transactions'): ?>
+<div class="topbar"><h1>Riwayat Transaksi</h1></div>
+<table>
+    <tr>
+        <th>No</th>
+        <th>Invoice</th>
+        <th>Customer</th>
+        <th>Total</th>
+        <th>Tanggal</th>
+    </tr>
+    <?php
+    $no = 1;
+    $transactions = mysqli_query($conn, "SELECT * FROM transactions ORDER BY id DESC");
+    while($t = mysqli_fetch_assoc($transactions)):
+    ?>
+    <tr>
+        <td><?php echo $no++; ?></td>
+        <td><?php echo $t['invoice']; ?></td>
+        <td><?php echo $t['customer_name']; ?></td>
+        <td>Rp <?php echo number_format($t['total']); ?></td>
+        <td><?php echo $t['created_at']; ?></td>
+    </tr>
+    <?php endwhile; ?>
+</table>
+<?php endif; ?>
 
-            if (cartItem) {
-                cartItem.qty += 1;
-            } else {
-                cart.push({ ...product, qty: 1 });
-            }
-            updateCart();
-        }
+<?php if($page == 'receipt'): ?>
+<?php
+$invoice = $_SESSION['last_invoice'] ?? '';
+$data = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM transactions WHERE invoice='$invoice'"));
+$details = mysqli_query($conn, "SELECT * FROM transaction_details WHERE invoice='$invoice'");
+?>
+<div class="receipt">
+    <h2>STRUK BELANJA</h2>
+    <p><b>Invoice:</b> <?php echo $data['invoice'] ?? '-'; ?></p>
+    <p><b>Customer:</b> <?php echo $data['customer_name'] ?? '-'; ?></p>
+    <p><b>Tanggal:</b> <?php echo $data['created_at'] ?? '-'; ?></p>
+    <hr style="margin: 15px 0; border: none; border-top: 1px dashed #000;">
+    <table>
+        <tr>
+            <th style="background:#eee; color:#000;">Produk</th>
+            <th style="background:#eee; color:#000;">Qty</th>
+            <th style="background:#eee; color:#000;">Subtotal</th>
+        </tr>
+        <?php while($d = mysqli_fetch_assoc($details)): ?>
+        <tr>
+            <td><?php echo $d['product_name']; ?></td>
+            <td><?php echo $d['qty']; ?></td>
+            <td>Rp <?php echo number_format($d['subtotal']); ?></td>
+        </tr>
+        <?php endwhile; ?>
+    </table>
+    <hr style="margin: 15px 0; border: none; border-top: 1px dashed #000;">
+    <p><b>Total:</b> Rp <?php echo number_format($data['total'] ?? 0); ?></p>
+    <p><b>Bayar:</b> Rp <?php echo number_format($data['pay'] ?? 0); ?></p>
+    <p><b>Kembalian:</b> Rp <?php echo number_format($data['change_money'] ?? 0); ?></p>
+    <br>
+    <button onclick="window.print()" style="background:#3b82f6;">Cetak Struk</button>
+    <a href="index.php?page=transactions"><button style="background:#64748b;">Kembali</button></a>
+</div>
+<?php endif; ?>
 
-        // Ubah Jumlah Qty
-        function changeQty(productId, amount) {
-            const cartItem = cart.find(item => item.id === productId);
-            if (cartItem) {
-                cartItem.qty += amount;
-                if (cartItem.qty <= 0) {
-                    cart = cart.filter(item => item.id !== productId);
-                }
-            }
-            updateCart();
-        }
+</div>
+<?php endif; ?>
 
-        // Update Tampilan Keranjang
-        function updateCart() {
-            const container = document.getElementById('cartItems');
-            const grandTotalEl = document.getElementById('grandTotal');
-            
-            if (cart.length === 0) {
-                container.innerHTML = `<p style="text-align: center; color: #aaa; margin-top: 20px; font-size: 13px;">Keranjang masih kosong</p>`;
-                grandTotalEl.innerText = "Rp 0";
-                document.getElementById('changeAmount').innerText = "Rp 0";
-                return;
-            }
-
-            container.innerHTML = "";
-            let total = 0;
-
-            cart.forEach(item => {
-                let subtotal = item.price * item.qty;
-                total += subtotal;
-                container.innerHTML += `
-                    <div class="cart-item">
-                        <div class="cart-item-info">
-                            <span><strong>${item.name}</strong></span>
-                            <span>Rp ${item.price.toLocaleString('id-ID')} x ${item.qty}</span>
-                        </div>
-                        <div class="cart-item-actions">
-                            <button onclick="changeQty(${item.id}, -1)">-</button>
-                            <span>${item.qty}</span>
-                            <button onclick="changeQty(${item.id}, 1)">+</button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            grandTotalEl.innerText = `Rp ${total.toLocaleString('id-ID')}`;
-            calculateChange();
-        }
-
-        // Hitung Kembalian
-        function calculateChange() {
-            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const cash = parseFloat(document.getElementById('cashAmount').value) || 0;
-            const change = cash - total;
-
-            const changeEl = document.getElementById('changeAmount');
-            if (change >= 0) {
-                changeEl.innerText = `Rp ${change.toLocaleString('id-ID')}`;
-                changeEl.style.color = "#2980b9";
-            } else {
-                changeEl.innerText = "Uang Kurang";
-                changeEl.style.color = "#e74c3c";
-            }
-        }
-
-        // Proses Pembayaran & Struk
-        function processPayment() {
-            if (cart.length === 0) {
-                alert("Keranjang masih kosong!");
-                return;
-            }
-
-            const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const cash = parseFloat(document.getElementById('cashAmount').value) || 0;
-
-            if (cash < total) {
-                alert("Uang tunai kurang dari total belanja!");
-                return;
-            }
-
-            const change = cash - total;
-            
-            let struk = `=== STRUK PEMBAYARAN ===\n`;
-            struk += `APLIKASI KASIR\n`;
-            struk += `Kasir: Nurul Fadilah\n`;
-            struk += `------------------------\n`;
-            cart.forEach(item => {
-                struk += `${item.name} x${item.qty} = Rp ${(item.price * item.qty).toLocaleString('id-ID')}\n`;
-            });
-            struk += `------------------------\n`;
-            struk += `Total: Rp ${total.toLocaleString('id-ID')}\n`;
-            struk += `Tunai: Rp ${cash.toLocaleString('id-ID')}\n`;
-            struk += `Kembali: Rp ${change.toLocaleString('id-ID')}\n`;
-            struk += `========================\n`;
-            struk += `Terima Kasih Telah Berbelanja!`;
-
-            alert(struk);
-
-            // Reset Kasir
-            cart = [];
-            document.getElementById('cashAmount').value = "";
-            updateCart();
-        }
-
-        // Inisialisasi awal
-        displayProducts();
-    </script>
 </body>
 </html>
